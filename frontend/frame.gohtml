@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Terminal</title>
+    <link rel="stylesheet" href="/frontend/css/xterm.css">
+</head>
+<body>
+
+<div id="terminal"></div>
+
+<script src="/frontend/js/xterm.js"></script>
+<script src="/frontend/js/xterm-addon-fit.js"></script>
+<script src="/frontend/js/xterm-addon-web-links.js"></script>
+<script>
+    const term = new Terminal({
+        rendererType: "canvas",
+        rows: 24,
+        cols: 100,
+        cursorBlink: true,
+        cursorStyle: "underline",
+        theme: {
+            foreground: "yellow", //字体
+            background: "#060101", //背景色
+            cursor: "help" //设置光标
+        }
+    })
+    term.fiter = new FitAddon.FitAddon()
+    term.loadAddon(new WebLinksAddon.WebLinksAddon())
+    term.open(document.getElementById("terminal"))
+
+    const ws = new WebSocket("ws://localhost:80/api" + location.search)
+
+    ws.onopen = e => {
+        term.fiter.fit()
+        term.onData(e => {
+            ws.send(e)
+        })
+    }
+    ws.onmessage = e => {
+        term.write(e.data)
+    }
+    ws.onclose = e => {
+        term.write("\r\n\x1b[33m连接断开\x1b[0m")
+    }
+</script>
+</body>
+</html>
